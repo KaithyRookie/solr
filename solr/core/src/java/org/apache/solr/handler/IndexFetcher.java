@@ -192,6 +192,7 @@ public class IndexFetcher {
     public static final IndexFetchResult LOCAL_ACTIVITY_DURING_REPLICATION = new IndexFetchResult("Local index modification during replication", false, null);
     public static final IndexFetchResult EXPECTING_NON_LEADER = new IndexFetchResult("Replicating from leader but I'm the shard leader", false, null);
     public static final IndexFetchResult LEADER_IS_NOT_ACTIVE = new IndexFetchResult("Replicating from leader but leader is not active", false, null);
+    public static final IndexFetchResult LEADER_IS_DISABLED_REPLICATION = new IndexFetchResult("Replicating from leader but leader is disabled replication", false, null);
 
     IndexFetchResult(String message, boolean successful, Throwable exception) {
       this.message = message;
@@ -440,6 +441,10 @@ public class IndexFetcher {
 
       log.info("Leader's generation: {}", latestGeneration);
       log.info("Leader's version: {}", latestVersion);
+      if(latestVersion == -1L && latestGeneration == -1L) {
+          log.warn("Leader's disable replication, we will do nothing");
+          return IndexFetchResult.LEADER_IS_DISABLED_REPLICATION;
+      }
 
       // TODO: make sure that getLatestCommit only returns commit points for the main index (i.e. no side-car indexes)
       IndexCommit commit = solrCore.getDeletionPolicy().getLatestCommit();

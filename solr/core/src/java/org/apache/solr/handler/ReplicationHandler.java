@@ -261,7 +261,13 @@ public class ReplicationHandler extends RequestHandlerBase implements SolrCoreAw
         rsp.add(CMD_INDEX_VERSION, IndexDeletionPolicyWrapper.getCommitTimestamp(commitPoint));
         rsp.add(GENERATION, commitPoint.getGeneration());
         rsp.add(STATUS, OK_STATUS);
-      } else {
+      } else if (!replicationEnabled.get()) {
+          // when Leader replication is disabled, we send -1 to let Follower's indexFetcher do nothing
+          // otherwise Follower will delete all files
+          rsp.add(CMD_INDEX_VERSION, -1L);
+          rsp.add(GENERATION, -1L);
+          rsp.add(STATUS, OK_STATUS);
+      }else {
         // This happens when replication is not configured to happen after startup and no commit/optimize
         // has happened yet.
         rsp.add(CMD_INDEX_VERSION, 0L);
